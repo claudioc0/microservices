@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ----- Estágio 1: "Builder" -----
 # Usamos uma imagem node para instalar as dependências
 FROM node:18-alpine AS builder
@@ -26,22 +25,4 @@ COPY swagger.yaml ./
 EXPOSE 3000
 
 # Comando para iniciar o servidor
-=======
-# Estágio 1: Build
-FROM node:18-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-
-# Estágio 2: Produção
-FROM node:18-alpine
-WORKDIR /app
-COPY --from=builder /app ./
-
-# ADICIONE ESTA LINHA PARA COPIAR O SWAGGER FILE
-COPY swagger.yaml .
-
-EXPOSE 3000
->>>>>>> e18ea1c4509abc2261c5ecf0b29c13d7960e015e
 CMD ["node", "index.js"]
