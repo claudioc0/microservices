@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 require('dotenv').config();
 
+=======
+>>>>>>> e18ea1c4509abc2261c5ecf0b29c13d7960e015e
 const express = require('express');
 const mongoose = require('mongoose');
 
