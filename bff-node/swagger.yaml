@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: API de Conversão de Moedas (BFF)
+  description: BFF que agrega dados dos microsserviços de Contas e Transações.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /contas:
+    post:
+      summary: Cria uma nova conta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Conta'
+      responses:
+        '201':
+          description: Conta criada com sucesso
+    get:
+      summary: Lista todas as contas
+      responses:
+        '200':
+          description: Lista de contas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conta'
+  
+  /transacoes:
+    post:
+      summary: Inicia o processo de criação de uma nova transação via evento
+      description: O BFF envia a requisição para uma Function HTTP Trigger.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NovaTransacao'
+      responses:
+        '202':
+          description: Requisição aceita para processamento
+  
+  /relatorio/conta/{id}:
+    get:
+      summary: Relatório agregado de uma conta e suas últimas transações
+      description: O BFF busca dados do microsserviço de Contas e da function de Transações, agregando a resposta.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dados agregados da conta e transações
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatorioAgregado'
+
+components:
+  schemas:
+    Conta:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome_usuario:
+          type: string
+        email:
+          type: string
+          format: email
+        saldo:
+          type: number
+          format: double
+        moeda_padrao:
+          type: string
+
+    NovaTransacao:
+      type: object
+      properties:
+        conta_id:
+          type: string
+          format: uuid
+        valor_origem:
+          type: number
+        moeda_origem:
+          type: string
+        moeda_destino:
+          type: string
+
+    Transacao:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conta_id:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+        valor_origem:
+          type: number
+        valor_destino:
+          type: number
+        moeda_origem:
+          type: string
+        moeda_destino:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+          
+    RelatorioAgregado:
+      type: object
+      properties:
+        dados_conta:
+          $ref: '#/components/schemas/Conta'
+        ultimas_transacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transacao'

@@ -1,0 +1,15 @@
+# Ignorar TODAS as pastas de dependências do Node
+**/node_modules
+
+# Ignorar TODOS os arquivos de senhas e segredos
+**/.env
+
+# Ignorar arquivos de configuração do VSCode (opcional, mas recomendado)
+**/.vscode
+
+# Ignarar arquivos de log
+*.log
+
+# Arquivos de sistema do Mac e Windows
+.DS_Store
+Thumbs.db
