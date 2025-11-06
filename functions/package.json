@@ -8,18 +8,10 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
-<<<<<<< HEAD
     "@azure/functions": "^4.0.0",
     "axios": "^1.12.2"
-=======
-    "@azure/functions": "^4.0.0"
->>>>>>> e18ea1c4509abc2261c5ecf0b29c13d7960e015e
   },
   "devDependencies": {
     "azure-functions-core-tools": "^4.x"
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> e18ea1c4509abc2261c5ecf0b29c13d7960e015e

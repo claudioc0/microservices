@@ -1,41 +1,50 @@
 require('dotenv').config();
-
 const express = require('express');
-const mongoose = require('mongoose');
+const featureRoutes = require('./features'); // Importa o roteador
+const { connectToDatabase } = require('./database'); // Importa a função de conexão
 
+// --- CORREÇÃO: Movido 'app' para o escopo global ---
+// Isso garante que o 'module.exports = app' funcione
+// e que o 'app' seja real quando o Supertest o importar.
 const app = express();
+// ----------------------------------------------------
+
+const PORT = process.env.PORT || 3002;
+
+// Middlewares Padrão
 app.use(express.json());
 
-// Conexão com MongoDB Atlas (use variáveis de ambiente!)
-const mongoUri = 'mongodb+srv://claudiocolomboferreira13_db_user:9OgYnD8petAI3OOj@cluster0.nhpcddl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(mongoUri);
+// Carrega todas as rotas (definidas em /features/index.js)
+app.use('/', featureRoutes);
 
-const TransacaoSchema = new mongoose.Schema({
-    conta_id: String,
-    tipo: String,
-    valor_origem: Number,
+// Handler de Erro Genérico
+app.use((err, req, res, next) => {
+  console.error("ERRO INESPERADO (Transações):", err.message || err);
+  res.status(500).json({ 
+      message: "Ocorreu um erro interno no servidor de Transações.",
+      error: err.code || err.message 
+  });
 });
-const Transacao = mongoose.model('Transacao', TransacaoSchema);
 
-// Endpoint para buscar transações de uma conta
-app.get('/transacoes/conta/:contaId', async (req, res) => {
-    try {
-        const transacoes = await Transacao.find({ conta_id: req.params.contaId }).limit(5);
-        res.status(200).json(transacoes);
-    } catch (error) {
-        res.status(500).send(error);
+/**
+ * Função auto-executável para iniciar o servidor.
+ */
+(async () => {
+  try {
+    // 1. Conecta ao MongoDB
+    await connectToDatabase();
+    
+    // 2. Inicia o servidor Express (SÓ SE NÃO ESTIVER TESTANDO)
+    //    Esta é a atualização crucial para o Jest funcionar
+    if (require.main === module) {
+      app.listen(PORT, () => {
+        console.log(`[Clean Architecture] Microserviço de Transações (Vertical Slice) rodando na porta ${PORT}`);
+      });
     }
-});
+  } catch (error) {
+    console.error("Falha ao iniciar o servidor de transações:", error);
+  }
+})();
 
-// Este serviço receberá o comando de escrita da Function 2
-app.post('/transacoes', async (req, res) => {
-    try {
-        const novaTransacao = new Transacao(req.body);
-        await novaTransacao.save();
-        res.status(201).send(novaTransacao);
-    } catch (error) {
-        res.status(500).send(error);
-    }
-});
-
-app.listen(3002, () => console.log('Microserviço de Transações rodando na porta 3002'));
+// Exportamos o 'app' para que o Supertest possa importá-lo
+module.exports = app;
