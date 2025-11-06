@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config(); 
 
 const express = require('express');
 const { Connection, Request } = require('tedious');
@@ -6,20 +6,19 @@ const { Connection, Request } = require('tedious');
 const app = express();
 app.use(express.json());
 
-// Configuração da conexão com Azure SQL (use variáveis de ambiente!)
 const config = {
-  server: 'globalstable.database.windows.net',
-  authentication: {
-    type: 'default',
-    options: {
-      userName: 'CloudSA64d4a7e8',
-      password: '9OgYnD8petAI3OOj'
-    }
-  },
-  options: {
-    encrypt: true,
-    database: 'GlobalStable'
-  }
+  server: process.env.SQL_SERVER, 
+  authentication: {
+    type: 'default',
+    options: {
+      userName: process.env.SQL_USER,
+      password: process.env.SQL_PASS  
+    }
+  },
+  options: {
+    encrypt: true,
+    database: process.env.SQL_DB 
+  }
 };
 
 // Endpoint para buscar conta por ID 
