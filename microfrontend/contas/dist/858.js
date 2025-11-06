@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcontas=self.webpackChunkcontas||[]).push([[858],{858:(e,n,t)=>{t.r(n),t.d(n,{default:()=>u});var a=t(884),s=t.n(a);function u(){return s().createElement("div",null,"App Contas (remote)")}}}]);

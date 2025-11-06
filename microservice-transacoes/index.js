@@ -14,7 +14,6 @@ const TransacaoSchema = new mongoose.Schema({
     conta_id: String,
     tipo: String,
     valor_origem: Number,
-    // ... outros campos
 });
 const Transacao = mongoose.model('Transacao', TransacaoSchema);
 

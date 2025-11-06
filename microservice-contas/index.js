@@ -6,12 +6,20 @@ const { Connection, Request } = require('tedious');
 const app = express();
 app.use(express.json());
 
+<<<<<<< HEAD
+=======
+// Configuração da conexão com Azure SQL 
+>>>>>>> d5653a50f24b569cd5341fd4687539b95904cd09
 const config = {
   server: process.env.SQL_SERVER, 
   authentication: {
     type: 'default',
     options: {
+<<<<<<< HEAD
       userName: process.env.SQL_USER,
+=======
+      userName: process.env.SQL_USER, 
+>>>>>>> d5653a50f24b569cd5341fd4687539b95904cd09
       password: process.env.SQL_PASS  
     }
   },
@@ -20,6 +28,32 @@ const config = {
     database: process.env.SQL_DB 
   }
 };
+
+app.get('/contas', (req, res) => {
+  const connection = new Connection(config);
+  connection.on('connect', (err) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+
+    // Query que retorna todas as contas como um JSON
+    const request = new Request(`SELECT * FROM Contas FOR JSON PATH`, (err, rowCount, rows) => {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        if (rowCount === 0) {
+            res.status(200).json([]); // Retorna array vazio se não houver contas
+        } else {
+            // O FOR JSON PATH retorna um array dentro de colchetes, então rows[0][0].value já é o JSON string
+            res.status(200).json(JSON.parse(rows[0][0].value));
+        }
+      }
+      connection.close();
+    });
+    connection.execSql(request);
+  });
+  connection.connect();
+});
 
 // Endpoint para buscar conta por ID 
 app.get('/contas/:id', (req, res) => {
