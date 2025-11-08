@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "Microsserviço de Transações (MongoDB) refatorado com Vertical Slice.",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.19.2",
     "express-promise-router": "^4.1.1",

@@ -1,44 +1,63 @@
 require('dotenv').config();
 const express = require('express');
-const featureRoutes = require('./features'); // Importa o roteador
-const { connectToDatabase } = require('./database'); // Importa a função de conexão
+const cors = require('cors');
+const { connectToDatabase, Transacao } = require('./database'); // ✅ Importa daqui
 
-// --- CORREÇÃO: Movido 'app' para o escopo global ---
-// Isso garante que o 'module.exports = app' funcione
-// e que o 'app' seja real quando o Supertest o importar.
 const app = express();
-// ----------------------------------------------------
-
 const PORT = process.env.PORT || 3002;
 
-// Middlewares Padrão
+app.use(cors());
 app.use(express.json());
 
-// Carrega todas as rotas (definidas em /features/index.js)
-app.use('/', featureRoutes);
+// ✅ Criar nova transação
+app.post('/transacoes', async (req, res) => {
+  try {
+    const { conta_id, tipo, valor_origem, moeda_origem, valor_destino, moeda_destino } = req.body;
 
-// Handler de Erro Genérico
-app.use((err, req, res, next) => {
-  console.error("ERRO INESPERADO (Transações):", err.message || err);
-  res.status(500).json({ 
-      message: "Ocorreu um erro interno no servidor de Transações.",
-      error: err.code || err.message 
-  });
+    if (!conta_id || !tipo || !valor_origem || !moeda_origem || !valor_destino || !moeda_destino) {
+      return res.status(400).json({ message: 'Campos obrigatórios ausentes.' });
+    }
+
+    const novaTransacao = new Transacao({
+      conta_id,
+      tipo,
+      valor_origem,
+      moeda_origem,
+      valor_destino,
+      moeda_destino,
+    });
+
+    await novaTransacao.save();
+
+    res.status(201).json({
+      message: 'Transação registrada com sucesso.',
+      transacao: novaTransacao
+    });
+  } catch (error) {
+    console.error("Erro ao registrar transação:", error);
+    res.status(500).json({ message: "Erro ao registrar transação.", error: error.message });
+  }
 });
 
-/**
- * Função auto-executável para iniciar o servidor.
- */
+// ✅ Buscar transações por conta
+app.get('/transacoes/:contaId', async (req, res) => {
+  try {
+    const { contaId } = req.params;
+    const transacoes = await Transacao.find({ conta_id: contaId }).sort({ timestamp: -1 });
+    res.json(transacoes);
+  } catch (error) {
+    console.error("Erro ao buscar transações:", error);
+    res.status(500).json({ message: "Erro ao buscar transações.", error: error.message });
+  }
+});
+
+// Inicialização
 (async () => {
   try {
-    // 1. Conecta ao MongoDB
     await connectToDatabase();
-    
-    // 2. Inicia o servidor Express (SÓ SE NÃO ESTIVER TESTANDO)
-    //    Esta é a atualização crucial para o Jest funcionar
     if (require.main === module) {
       app.listen(PORT, () => {
-        console.log(`[Clean Architecture] Microserviço de Transações (Vertical Slice) rodando na porta ${PORT}`);
+        console.log(`[Clean Architecture] Microserviço de Transações rodando na porta ${PORT}`);
       });
     }
   } catch (error) {
@@ -46,5 +65,4 @@ app.use((err, req, res, next) => {
   }
 })();
 
-// Exportamos o 'app' para que o Supertest possa importá-lo
 module.exports = app;

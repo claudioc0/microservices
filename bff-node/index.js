@@ -6,11 +6,11 @@ const axios = require('axios');
 const swaggerUi = require('swagger-ui-express');
 const fs = require('fs');
 const yaml = require('js-yaml');
-const cors = require('cors'); 
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
-app.use(cors()); 
+app.use(cors());
 
 // Carregar Swagger UI
 const swaggerDocument = yaml.load(fs.readFileSync('./swagger.yaml', 'utf8'));
@@ -20,16 +20,21 @@ const URL_MS_CONTAS = process.env.URL_MS_CONTAS || 'http://localhost:3001';
 const URL_MS_TRANSOES = process.env.URL_MS_TRANSOES || 'http://localhost:3002';
 const URL_FUNCTION_CRIAR = process.env.URL_FUNCTION_CRIAR;
 
+// --- ENDPOINT 'GET /contas' ---
 app.get('/contas', async (req, res) => {
     try {
         const response = await axios.get(`${URL_MS_CONTAS}/contas`);
         res.status(response.status).json(response.data);
     } catch (error) {
-        res.status(error.response?.status || 500).send(error.message);
+        // --- CORREÇÃO AQUI ---
+        // Se o microsserviço falhar, repasse o erro como JSON
+        const message = error.response?.data?.message || error.message;
+        const status = error.response?.status || 500;
+        res.status(status).json({ message: message }); // Trocado .send() por .json()
     }
 });
 
-// Endpoint de AGREGAÇÃO 
+// Endpoint de AGREGAÇÃO (sem alterações)
 app.get('/relatorio/conta/:id', async (req, res) => {
     try {
         const contaId = req.params.id;
@@ -45,27 +50,38 @@ app.get('/relatorio/conta/:id', async (req, res) => {
         
         res.status(200).json(relatorio);
     } catch (error) {
-        res.status(500).send({ message: "Erro ao agregar dados", error: error.message });
+        // --- CORREÇÃO AQUI (Melhoria) ---
+        const message = error.response?.data?.message || error.message;
+        const status = error.response?.status || 500;
+        res.status(status).json({ message: message });
     }
 });
 
-// Endpoint de PROXY para criar conta 
+// --- ENDPOINT 'POST /contas' ---
 app.post('/contas', async (req, res) => {
     try {
         const response = await axios.post(`${URL_MS_CONTAS}/contas`, req.body);
         res.status(response.status).json(response.data);
     } catch (error) {
-        res.status(error.response?.status || 500).send(error.message);
+        // --- CORREÇÃO AQUI ---
+        // Se o microsserviço falhar (ex: erro 400 de validação),
+        // repasse o erro como JSON para o frontend.
+        const message = error.response?.data?.message || error.message;
+        const status = error.response?.status || 500;
+        res.status(status).json({ message: message }); // Trocado .send() por .json()
     }
 });
 
-// Endpoint que chama a FUNCTION 
+// Endpoint que chama a FUNCTION (sem alterações)
 app.post('/transacoes', async (req, res) => {
     try {
         const response = await axios.post(URL_FUNCTION_CRIAR, req.body);
         res.status(response.status).json(response.data);
     } catch (error) {
-        res.status(500).send({ message: "Erro ao iniciar criação da transação", error: error.message });
+        // --- CORREÇÃO AQUI (Melhoria) ---
+        const message = error.response?.data?.message || error.message;
+        const status = error.response?.status || 500;
+        res.status(status).json({ message: message });
     }
 });
 
