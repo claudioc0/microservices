@@ -1,12 +1,13 @@
+// features/listar-transacoes-por-conta/index.test.js
 const request = require('supertest');
 const app = require('../../index'); // Importa o servidor
-const db = require('../../database'); // Importa o módulo do banco
+const { Transacao } = require('../../database'); // Importa o Model
 
-// --- CORREÇÃO NO MOCK ---
-// Criamos um mock para a função final .limit()
+// --- CORREÇÃO AQUI ---
+// Precisamos de um mock para a função final .limit()
 // que é a que realmente retorna a Promise
 const mockLimit = jest.fn();
-// -------------------------
+// --------------------
 
 // =======================================================
 // MOCK DO MONGOOSE (MÓDULO database.js)
@@ -32,11 +33,11 @@ jest.mock('../../database', () => ({
 // =======================================================
 
 
-describe('Feature: Listar Transações por Conta (GET /transacoes/conta/:id)', () => {
+describe('Feature: Listar Transações por Conta (GET /transacoes/conta/:contaId)', () => {
 
   beforeEach(() => {
     // Limpa os mocks antes de cada teste
-    db.Transacao.find.mockClear();
+    Transacao.find.mockClear();
     // --- CORREÇÃO ---
     // Limpamos o mock do .limit()
     mockLimit.mockClear();
@@ -60,7 +61,7 @@ describe('Feature: Listar Transações por Conta (GET /transacoes/conta/:id)', (
     // 3. ASSERT (Verificar)
     expect(response.status).toBe(200);
     expect(response.body).toEqual(dadosFalsos);
-    expect(db.Transacao.find).toHaveBeenCalledWith({ conta_id: '123' });
+    expect(Transacao.find).toHaveBeenCalledWith({ conta_id: '123' });
   });
 
   it('deve retornar 200 e um array vazio se não houver transações', async () => {
@@ -73,7 +74,8 @@ describe('Feature: Listar Transações por Conta (GET /transacoes/conta/:id)', (
 
     // 3. ASSERT
     expect(response.status).toBe(200);
+    expect(Transacao.find).toHaveBeenCalledWith({ conta_id: '404' });
+    expect(response.status).toBe(200);
     expect(response.body).toEqual([]);
-    expect(db.Transacao.find).toHaveBeenCalledWith({ conta_id: '404' });
   });
-}); 
+});

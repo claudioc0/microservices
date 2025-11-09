@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { connectToDatabase, Transacao } = require('./database'); // ✅ Importa daqui
+const { connectToDatabase, Transacao } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -9,11 +9,14 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-// ✅ Criar nova transação
+// ------------------------------
+// POST /transacoes
+// ------------------------------
 app.post('/transacoes', async (req, res) => {
   try {
     const { conta_id, tipo, valor_origem, moeda_origem, valor_destino, moeda_destino } = req.body;
 
+    // Validação dos campos obrigatórios
     if (!conta_id || !tipo || !valor_origem || !moeda_origem || !valor_destino || !moeda_destino) {
       return res.status(400).json({ message: 'Campos obrigatórios ausentes.' });
     }
@@ -27,31 +30,37 @@ app.post('/transacoes', async (req, res) => {
       moeda_destino,
     });
 
-    await novaTransacao.save();
+    const transacaoSalva = await novaTransacao.save();
 
-    res.status(201).json({
-      message: 'Transação registrada com sucesso.',
-      transacao: novaTransacao
-    });
+    res.status(201).json(transacaoSalva);
   } catch (error) {
     console.error("Erro ao registrar transação:", error);
-    res.status(500).json({ message: "Erro ao registrar transação.", error: error.message });
+    res.status(500).json({ error: error.code || 'MONGO_ERR', message: error.message });
   }
 });
 
-// ✅ Buscar transações por conta
-app.get('/transacoes/:contaId', async (req, res) => {
+// ------------------------------
+// GET /transacoes/conta/:contaId
+// ------------------------------
+app.get('/transacoes/conta/:contaId', async (req, res) => {
   try {
     const { contaId } = req.params;
-    const transacoes = await Transacao.find({ conta_id: contaId }).sort({ timestamp: -1 });
-    res.json(transacoes);
+
+    // Busca transações da conta, ordena por timestamp e limita a 50 registros
+    const transacoes = await Transacao.find({ conta_id: contaId })
+      .sort({ timestamp: -1 })
+      .limit(50);
+
+    res.status(200).json(transacoes);
   } catch (error) {
     console.error("Erro ao buscar transações:", error);
-    res.status(500).json({ message: "Erro ao buscar transações.", error: error.message });
+    res.status(500).json({ error: error.code || 'MONGO_ERR', message: error.message });
   }
 });
 
-// Inicialização
+// ------------------------------
+// Inicialização do servidor
+// ------------------------------
 (async () => {
   try {
     await connectToDatabase();

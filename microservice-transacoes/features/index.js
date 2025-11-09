@@ -5,11 +5,10 @@ const { listarTransacoesPorContaHandler } = require('./listar-transacoes-por-con
 
 const router = Router();
 
+// POST /transacoes -> cria uma nova transação
+router.post('/', criarTransacaoHandler);
 
-
-router.post('/transacoes', criarTransacaoHandler);
-
-router.get('/transacoes/conta/:contaId', listarTransacoesPorContaHandler);
-
+// GET /transacoes/conta/:id -> lista transações por conta
+router.get('/conta/:id', listarTransacoesPorContaHandler);
 
 module.exports = router;

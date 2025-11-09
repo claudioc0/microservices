@@ -1,70 +1,67 @@
-// features/criar-conta/index.test.js
 const request = require('supertest');
-const app = require('../../index'); // Importa o servidor
+const app = require('../../index'); // Importa o servidor Express
 const db = require('../../database'); // Importa o módulo do banco
 
 // =======================================================
-// MOCK DO database.js
+// Mock do database.js
 // =======================================================
-// "Mockamos" (enganamos) o módulo 'database'
 jest.mock('../../database', () => ({
-  // Mantemos o TYPES real, pois nosso handler o utiliza
-  TYPES: require('tedious').TYPES, 
-  // "Enganamos" a função executeSql
-  executeSql: jest.fn(), 
+  TYPES: require('tedious').TYPES,
+  executeSql: jest.fn(),
 }));
-// =======================================================
-
 
 describe('Feature: Criar Conta (POST /contas)', () => {
-
   beforeEach(() => {
-    // Limpa o mock antes de cada teste
     db.executeSql.mockClear();
   });
 
   it('deve retornar 201 e a nova conta criada', async () => {
-    // 1. ARRANGE (Arrumar)
+    // ARRANGE
     const dadosEntrada = {
       nome_usuario: 'Claudio Teste',
       email: 'claudio@teste.com',
       saldo: 1000,
-      moeda_padrao: 'BRL'
-    };
-    
-    const dadosRetornoDoBanco = {
-      id: 'uuid-falso', // O banco retornaria o ID gerado
-      ...dadosEntrada
+      moeda_padrao: 'BRL',
     };
 
-    // Dizemos ao nosso mock para retornar os 'dadosRetornoDoBanco'
+    const dadosRetornoDoBanco = [
+      {
+        id: 'uuid-falso',
+        nome_usuario: 'Claudio Teste',
+        email: 'claudio@teste.com',
+        saldo: 1000,
+        moeda_padrao: 'BRL',
+      },
+    ];
+
+    // Mock do retorno do banco
     db.executeSql.mockResolvedValue({ result: dadosRetornoDoBanco });
 
-    // 2. ACT (Agir)
+    // ACT
     const response = await request(app)
       .post('/contas')
-      .send(dadosEntrada); // Envia os dados no corpo da requisição
+      .send(dadosEntrada);
 
-    // 3. ASSERT (Verificar)
+    // ASSERT
     expect(response.status).toBe(201);
-    expect(response.body).toEqual(dadosRetornoDoBanco);
-    expect(db.executeSql).toHaveBeenCalledTimes(1); // Garante que o banco foi chamado
+    expect(response.body).toEqual(dadosRetornoDoBanco[0]);
+    expect(db.executeSql).toHaveBeenCalledTimes(1);
   });
 
-  it('deve retornar 400 (Bad Request) se os dados estiverem faltando', async () => {
-    // 1. ARRANGE
+  it('deve retornar 400 se dados obrigatórios estiverem faltando', async () => {
+    // ARRANGE
     const dadosIncompletos = {
-      nome_usuario: 'Usuario Incompleto'
-      // email e saldo estão faltando
+      nome_usuario: 'Usuario Incompleto',
+      // faltam email e saldo
     };
 
-    // 2. ACT
+    // ACT
     const response = await request(app)
       .post('/contas')
       .send(dadosIncompletos);
 
-    // 3. ASSERT
+    // ASSERT
     expect(response.status).toBe(400);
-    expect(db.executeSql).not.toHaveBeenCalled(); // Não deve nem tentar chamar o banco
+    expect(db.executeSql).not.toHaveBeenCalled();
   });
 });
